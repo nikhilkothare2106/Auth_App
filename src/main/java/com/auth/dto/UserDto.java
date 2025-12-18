@@ -25,7 +25,7 @@ public class UserDto {
     private String email;
     private String password;
     private String image;
-    private Boolean enabled = true;
+    private Boolean enabled;
     private Instant created_at;
     private Instant updated_at;
     private String gender;

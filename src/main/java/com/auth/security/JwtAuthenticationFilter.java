@@ -1,6 +1,7 @@
 package com.auth.security;
 
 import com.auth.exceptions.ErrorResponseService;
+import com.auth.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;

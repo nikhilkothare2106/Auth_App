@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
-
 @Getter
 @Setter
 @Builder
@@ -39,5 +38,10 @@ public class RefreshToken {
     @Column(nullable = false)
     private boolean revoked;
     private String replacedByToken;
+
+    @PrePersist
+    protected void OnCreate() {
+        this.createdAt = Instant.now();
+    }
 
 }

@@ -1,9 +1,10 @@
-package com.auth.security;
+package com.auth.service;
 
 import com.auth.entity.Role;
 import com.auth.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,11 +111,11 @@ public class JwtService {
 
     public UUID getUserId(String token) {
         Claims payload = parse(token).getPayload();
-        String userIdStr = (String) payload.get("userId");
-        if (userIdStr == null) {
+        String userId = (String) payload.get("userId");
+        if (userId == null) {
             throw new JwtException("User Id claim not found in token");
         }
-        return UUID.fromString(userIdStr);
+        return UUID.fromString(userId);
     }
 
     public String getJti(String token) {

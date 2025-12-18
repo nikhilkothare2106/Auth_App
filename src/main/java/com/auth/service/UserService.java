@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -67,7 +66,7 @@ public class UserService {
         if (userDto.getImage() != null) existingUser.setImage(userDto.getImage());
 
         if (userDto.getPassword() != null) existingUser.setPassword(userDto.getPassword());
-        existingUser.setEnabled(existingUser.isEnabled());
+        existingUser.setEnabled(userDto.getEnabled());
         User updatedUser = userRepository.save(existingUser);
         return userMapper.mapToUserDto(updatedUser);
     }

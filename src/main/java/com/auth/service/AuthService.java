@@ -1,15 +1,13 @@
 package com.auth.service;
 
 import com.auth.dto.LoginRequest;
-import com.auth.dto.LoginResponse;
+import com.auth.dto.TokenResponse;
 import com.auth.dto.UserDto;
 import com.auth.entity.RefreshToken;
 import com.auth.entity.User;
-import com.auth.mapper.UserMapper;
 import com.auth.repository.RefreshTokenRepository;
 import com.auth.repository.UserRepository;
-import com.auth.security.CookieService;
-import com.auth.security.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,11 +15,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -31,19 +27,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
-    private final UserMapper userMapper;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
+    private final TokenResponseService tokenResponseService;
     private final CookieService cookieService;
+    private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserDto registerUser(UserDto userDto) {
-
         userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         return userService.createUser(userDto);
     }
 
-    public LoginResponse loginUser(LoginRequest loginRequest, HttpServletResponse response) {
-        Authentication authentication = authenticateUser(loginRequest);
+    public TokenResponse loginUser(LoginRequest loginRequest, HttpServletResponse response) {
+        authenticateUser(loginRequest);
 
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
@@ -51,35 +47,12 @@ public class AuthService {
             throw new DisabledException("User is disabled");
         }
 
-        long refreshTtlSeconds = jwtService.getRefreshTtlSeconds();
-        String jti = UUID.randomUUID().toString();
-        RefreshToken refreshTokenObj = RefreshToken.builder()
-                .jti(jti)
-                .user(user)
-                .createdAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(refreshTtlSeconds))
-                .revoked(false)
-                .build();
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        refreshTokenRepository.save(refreshTokenObj);
-
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user,jti);
-
-        cookieService.attachRefreshCookie(response, refreshToken,(int) refreshTtlSeconds);
-        cookieService.addNoStoreHeaders(response);
-
-        LoginResponse loginResponse = LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .expiresIn(jwtService.getAccessTtlSeconds())
-                .user(userMapper.mapToUserDto(user))
-                .tokenType("access")
-                .build();
-        return loginResponse;
+        TokenResponse tokenResponse = tokenResponseService.
+                createTokenAndBuildResponse(user, refreshToken.getJti(), response);
+        return tokenResponse;
     }
-
-
 
     public Authentication authenticateUser(LoginRequest loginRequest) {
 
@@ -93,6 +66,25 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("User or Password invalid!");
         }
+
     }
 
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        cookieService.getRefreshTokenJwt(request).ifPresent(token -> {
+            try {
+                if(jwtService.isRefreshToken(token)) {
+                    String jti = jwtService.getJti(token);
+                    refreshTokenRepository.findByJti(jti).ifPresent(refreshToken -> {
+                        refreshToken.setRevoked(true);
+                        refreshTokenRepository.save(refreshToken);
+                    });
+                }
+            } catch (Exception e) {
+            }
+        });
+
+        cookieService.clearRefreshCookie(response);
+        cookieService.addNoStoreHeaders(response);
+        SecurityContextHolder.clearContext();
+    }
 }

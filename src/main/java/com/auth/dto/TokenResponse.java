@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class LoginResponse {
+public class TokenResponse {
     private String accessToken;
     private String refreshToken;
     private long expiresIn;
