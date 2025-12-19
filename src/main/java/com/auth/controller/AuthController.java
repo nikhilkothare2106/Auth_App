@@ -4,7 +4,6 @@ import com.auth.dto.LoginRequest;
 import com.auth.dto.TokenResponse;
 import com.auth.dto.UserDto;
 import com.auth.service.AuthService;
-import com.auth.service.CookieService;
 import com.auth.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final CookieService cookieService;
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")

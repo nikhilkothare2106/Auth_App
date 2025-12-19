@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,6 +28,9 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(User user) {
+
+        revokeAllUserTokens(user);
+
         RefreshToken token = RefreshToken.builder()
                 .jti(UUID.randomUUID().toString())
                 .user(user)
@@ -32,6 +38,17 @@ public class RefreshTokenService {
                 .revoked(false)
                 .build();
         return refreshTokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        Optional<List<RefreshToken>> refreshTokenList = refreshTokenRepository.findAllByUser(user);
+        if(refreshTokenList.isPresent()) {
+            List<RefreshToken> refreshTokens = refreshTokenList.get();
+            refreshTokens.forEach(refreshToken -> {
+                refreshToken.setRevoked(true);
+            });
+            refreshTokenRepository.saveAll(refreshTokens);
+        }
     }
 
     @Transactional

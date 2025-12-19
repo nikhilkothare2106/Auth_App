@@ -28,7 +28,6 @@ public class UserDto {
     private Boolean enabled;
     private Instant created_at;
     private Instant updated_at;
-    private String gender;
     private Provider provider;
     private Set<RoleDto> roles = new HashSet<>();
 

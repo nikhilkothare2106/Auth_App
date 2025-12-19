@@ -61,7 +61,6 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with given id."));
 
         if (userDto.getName() != null) existingUser.setName(userDto.getName());
-        if (userDto.getGender() != null) existingUser.setGender(userDto.getGender());
         if (userDto.getProvider() != null) existingUser.setProvider(userDto.getProvider());
         if (userDto.getImage() != null) existingUser.setImage(userDto.getImage());
 

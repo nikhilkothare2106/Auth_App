@@ -18,8 +18,8 @@ import java.util.UUID;
 @Entity
 public class User {
     @Id
-    @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id")
     private UUID id;
     private String name;
     @Column(unique = true)
@@ -29,9 +29,10 @@ public class User {
     private boolean enabled;
     private Instant created_at;
     private Instant updated_at;
-    private String gender;
 
+    @Enumerated(EnumType.STRING)
     private Provider provider;
+    private String providerId;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
@@ -49,5 +50,14 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updated_at = Instant.now();
+    }
+
+    public User(String name, String email, String image, boolean enabled,  Provider provider, String providerId) {
+        this.name = name;
+        this.email = email;
+        this.image = image;
+        this.enabled = enabled;
+        this.provider = provider;
+        this.providerId = providerId;
     }
 }

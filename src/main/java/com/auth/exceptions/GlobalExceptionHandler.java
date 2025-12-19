@@ -22,18 +22,6 @@ public class GlobalExceptionHandler {
 
     public final ErrorResponseService errorResponseService;
 
-//    @ExceptionHandler(JwtException.class)
-//    public ResponseEntity<ErrorResponse> handleJwtException(
-//            JwtException ex,
-//            HttpServletRequest request
-//    ) {
-//        return errorResponseService.buildErrorResponse(
-//                HttpStatus.NOT_FOUND,
-//                ex.getMessage(),
-//                request
-//        );
-//    }
-
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex,
